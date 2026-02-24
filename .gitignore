@@ -3,3 +3,7 @@ crazyswarm2_sim_webots/
 *.pyc
 *.o
 *~
+
+# Local artifacts
+*.zip
+.~lock*

@@ -1,9 +1,9 @@
 /motion_capture_tracking:
   ros__parameters:
     # one of "optitrack", "optitrack_closed_source", "vicon", "qualisys", "nokov", "vrpn", "motionanalysis"
-    type: "optitrack"
+    type: "vicon"
     # Specify the hostname or IP of the computer running the motion capture software
-    hostname: "141.23.110.143"
+    hostname: "128.255.185.173"
 
     topics:
       frame_id: "mocap"
@@ -18,10 +18,14 @@
       default: # for standard Crazyflie
         offset: [0.0, 0.0, 0.0]
         points:
-          p0: [   0.0,    0.0, 0.022]  # top
-          p1: [-0.042,  0.042, 0.0  ]  # back left   (M3)
-          p2: [-0.042, -0.042, 0.0  ]  # back right  (M2)
-          p3: [ 0.042, -0.042, 0.0  ]  # front right (M1)
+          #p0: [-0.0115546, -0.013444, -0.00570473]  # top
+          #p1: [0.00395375, -0.0232222, 0.0123243]  # back left   (M3)
+          #p2: [-0.00316328, 0.0209154, 0.000553529]  # back right  (M2)
+          #p3: [0.0107641, 0.0157509, -0.00717313]  # front right (M1)
+          p0: [-0.0115546, -0.013444, -0.00570473]
+          p1: [0.00395375, -0.0232222, 0.0123243]
+          p2: [-0.00316328, 0.0209154, 0.000553529]
+          p3: [0.0107641, 0.0157509, -0.00717313]
       default_single_marker:
         offset: [0.0, -0.01, -0.04]
         points:

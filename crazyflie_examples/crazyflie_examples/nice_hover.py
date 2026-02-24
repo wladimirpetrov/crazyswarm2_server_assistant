@@ -5,7 +5,7 @@ import numpy as np
 
 
 def main():
-    Z = 1.0
+    Z = 0.5
 
     swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
@@ -15,7 +15,7 @@ def main():
     timeHelper.sleep(1.5+Z)
     for cf in allcfs.crazyflies:
         pos = np.array(cf.initialPosition) + np.array([0, 0, Z])
-        cf.goTo(pos, 0, 1.0)
+        cf.goTo(pos, 0, 0.2) # 1.0
 
     print('press button to continue...')
     swarm.input.waitUntilButtonPressed()

@@ -38,6 +38,7 @@ def parse_yaml(context):
         robot_desc = f.read()
 
     server_params[1]['robot_description'] = robot_desc
+    #server_params[1]['broadcast_uri'] = 'radiobroadcast://*/50/2M'  # <- added line
 
     # construct motion_capture_configuration
     motion_capture_yaml = LaunchConfiguration('motion_capture_yaml_file').perform(context)

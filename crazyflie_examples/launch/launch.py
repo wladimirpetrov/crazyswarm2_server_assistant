@@ -41,10 +41,24 @@ def generate_launch_description():
             'use_sim_time': PythonExpression(["'", backend, "' == 'sim'"]),
         }]
     )
+    foxglove_bridge_node = Node(
+        package='foxglove_bridge',
+        executable='foxglove_bridge',
+        name='foxglove_bridge',
+        output='screen',
+        parameters=[{'use_sim_time': True}],  # if using simulation time
+        remappings=[
+        # Example: expose specific topics
+        # ('/cf235/pose', '/cf235/pose'),
+        # ('/cf235/path', '/cf235/path'),
+        # ('/tf', '/tf')
+        ]
+    )
 
     return LaunchDescription([
         script_launch_arg,
         backend_launch_arg,
         crazyflie,
-        example_node
+        example_node,
+        foxglove_bridge_node
     ])

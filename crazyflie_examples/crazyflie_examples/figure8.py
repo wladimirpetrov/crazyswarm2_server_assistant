@@ -22,8 +22,9 @@ def main():
     TIMESCALE = 1.0
     for i in range(TRIALS):
         for cf in allcfs.crazyflies:
+            print("uploading traj")
             cf.uploadTrajectory(0, 0, traj1)
-
+            print("uploaded traj")
         allcfs.takeoff(targetHeight=1.0, duration=2.0)
         timeHelper.sleep(2.5)
         for cf in allcfs.crazyflies:

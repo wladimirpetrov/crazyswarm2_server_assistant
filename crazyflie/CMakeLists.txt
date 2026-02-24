@@ -112,6 +112,9 @@ install(PROGRAMS
   scripts/aideck_streamer.py
   scripts/gui.py
   scripts/flash.py
+  scripts/l1_takeoff_cmdpos.py
+  scripts/l1_cmdpos_bridge.py
+  scripts/l1_cmdpos_bridge_two_drones_compare.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
