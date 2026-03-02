@@ -16,18 +16,16 @@ class L1CmdPosBridge(Node):
     Startup behavior:
       - ramp z from z0 -> takeoff_height over takeoff_duration seconds
       - after takeoff, publish /l1_status = 1.0 (keep at 1 Hz)
-      - then continuously forward:
-          x   <- /xend
-          y   <- /yend
-          z   <- /z_augment
-          yaw <- /psiend
-        If required inputs missing/stale, keep hovering at (x0, y0, takeoff_height, yaw0).
+      - then continuously publish cmd_position at publish_rate_hz using a ZOH behavior:
+          - listen to /x_input, /y_input, /z_input, /psi_input
+          - hold the last *committed* (x,y,z,psi) at high-rate
+          - switch to a new command set ONLY when ALL four topics have been updated
+            at least once since the last commit.
+        If we have never committed a full set yet, hover at (x0, y0, takeoff_height, yaw0).
 
     Notes:
-      - /z_augment and /psi_augment are subscribed with TRANSIENT_LOCAL so we get the last value
-        immediately even if we start late (requires publisher to be transient_local too).
-      - We enforce "freshness" (staleness timeout) on ALL inputs.
-      - We log when /z_augment is actually received (throttled) to verify data flow.
+      - This is designed for slow/bursty MPC updates (e.g., ~0.6s).
+      - input_timeout_sec is used only for WARNING logs (not gating).
     """
 
     def __init__(self):
@@ -41,24 +39,17 @@ class L1CmdPosBridge(Node):
         self.declare_parameter("takeoff_duration", 2.0)
         self.declare_parameter("publish_rate_hz", 20.0)
 
-        # Safe hover defaults (use your YAML initial position)
-        # self.declare_parameter("x0", 1.760813811)
-        # self.declare_parameter("y0", -0.177819071)
-        # self.declare_parameter("yaw0", 0.0)
-        # self.declare_parameter("z0", 0.0)
-        
         self.declare_parameter("x0", 0.0)
         self.declare_parameter("y0", 1.2)
         self.declare_parameter("yaw0", 0.0)
         self.declare_parameter("z0", 0.0)
 
-        # Freshness timeout (seconds). Inputs older than this are considered invalid.
-        # Use 0.2s if you publish ~20Hz; 1.0s if your chain is slower.
-        self.declare_parameter("input_timeout_sec", 0.2)
+        # Used for warning-only staleness reporting (NOT gating).
+        self.declare_parameter("input_timeout_sec", 1.0)
 
         # Debug prints
-        self.declare_parameter("debug_zaugment", True)
-        self.declare_parameter("debug_zaugment_period_sec", 1.0)
+        self.declare_parameter("debug_inputs", True)
+        self.declare_parameter("debug_period_sec", 1.0)
 
         self.cf_name = str(self.get_parameter("cf_name").value)
         self.takeoff_height = float(self.get_parameter("takeoff_height").value)
@@ -71,13 +62,13 @@ class L1CmdPosBridge(Node):
         self.z0 = float(self.get_parameter("z0").value)
 
         self.input_timeout_sec = float(self.get_parameter("input_timeout_sec").value)
-        self.debug_zaugment = bool(self.get_parameter("debug_zaugment").value)
-        self.debug_zaugment_period_sec = float(self.get_parameter("debug_zaugment_period_sec").value)
+        self.debug_inputs = bool(self.get_parameter("debug_inputs").value)
+        self.debug_period_sec = float(self.get_parameter("debug_period_sec").value)
 
         # ----------------------------
         # QoS
-        #   - crazyflie_server endpoints are typically BEST_EFFORT
         # ----------------------------
+        # crazyflie_server endpoints are typically BEST_EFFORT
         self.qos_be = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
             durability=DurabilityPolicy.VOLATILE,
@@ -85,20 +76,13 @@ class L1CmdPosBridge(Node):
             depth=10,
         )
 
-        # Default RELIABLE volatile (works for typical C++/Simulink pubs)
+        # For inputs from your C++ subscriber_node:
+        # Use RELIABLE + VOLATILE (matches default rclcpp QoS and avoids DURABILITY mismatch).
         self.qos_rel = QoSProfile(
             reliability=ReliabilityPolicy.RELIABLE,
             durability=DurabilityPolicy.VOLATILE,
             history=HistoryPolicy.KEEP_LAST,
             depth=10,
-        )
-
-        # "Latched" RELIABLE transient_local (requires publisher transient_local)
-        self.qos_latched = QoSProfile(
-            reliability=ReliabilityPolicy.RELIABLE,
-            durability=DurabilityPolicy.TRANSIENT_LOCAL,
-            history=HistoryPolicy.KEEP_LAST,
-            depth=1,
         )
 
         # ----------------------------
@@ -107,37 +91,48 @@ class L1CmdPosBridge(Node):
         self.cmd_topic = f"/{self.cf_name}/cmd_position"
         self.cmd_pub = self.create_publisher(Position, self.cmd_topic, self.qos_be)
 
-        # Publish status as BEST_EFFORT (matches your l1 node subscription in your code)
+        # Publish status as BEST_EFFORT (matches your L1 node subscription)
         self.l1_status_pub = self.create_publisher(Float64, "/l1_status", self.qos_be)
 
-        # Inputs:
-        # - xend/yend/psiend typically come from your optimizer/simulink nodes (RELIABLE volatile is fine)
-        # - z_augment and psi_augment we want "latched" behavior to avoid startup order sensitivity
-        self.xend_sub = self.create_subscription(Float64, "/xend", self._xend_cb, self.qos_rel)
-        self.yend_sub = self.create_subscription(Float64, "/yend", self._yend_cb, self.qos_rel)
+        # Inputs from MPC subscriber_node
+        self.x_sub = self.create_subscription(Float64, "/x_input", self._x_cb, self.qos_rel)
+        self.y_sub = self.create_subscription(Float64, "/y_input", self._y_cb, self.qos_rel)
+        self.z_sub = self.create_subscription(Float64, "/z_input", self._z_cb, self.qos_rel)
+        self.psi_sub = self.create_subscription(Float64, "/psi_input", self._psi_cb, self.qos_rel)
 
-        # IMPORTANT: subscribe to BOTH /z_augment and /psi_augment with TRANSIENT_LOCAL
-        self.zaug_sub = self.create_subscription(Float64, "/z_augment", self._zaug_cb, self.qos_latched)
-        self.paug_sub = self.create_subscription(Float64, "/psi_augment", self._paug_cb, self.qos_latched)
+        # ----------------------------
+        # Latest raw input values + timestamps + sequence counters
+        # ----------------------------
+        self._x_val = None
+        self._y_val = None
+        self._z_val = None
+        self._psi_val = None
 
-        # Your yaw command comes from /psiend (desired yaw), not from augmentation
-        self.psiend_sub = self.create_subscription(Float64, "/psiend", self._psiend_cb, self.qos_rel)
+        self._x_t = None
+        self._y_t = None
+        self._z_t = None
+        self._psi_t = None
 
-        # Latest values
-        self.xend = None
-        self.yend = None
-        self.zaug = None
-        self.psiend = None
+        # Incremented each time that topic updates
+        self._x_seq = 0
+        self._y_seq = 0
+        self._z_seq = 0
+        self._psi_seq = 0
 
-        # Last-received times (ROS time)
-        self.xend_t = None
-        self.yend_t = None
-        self.zaug_t = None
-        self.psiend_t = None
+        # The seq tuple that was last *committed* into the active command set
+        self._committed_seq = (0, 0, 0, 0)
+
+        # The actual command set we publish at high-rate (ZOH)
+        self._have_committed_set = False
+        self._cmd_x = self.x0
+        self._cmd_y = self.y0
+        self._cmd_z = self.takeoff_height
+        self._cmd_psi = self.yaw0
 
         # Debug / throttles
         self._last_missing_log_time_sec = -1e9
-        self._last_zaug_debug_log_time_sec = -1e9
+        self._last_debug_log_time_sec = -1e9
+        self._last_stale_warn_time_sec = -1e9
 
         # State machine
         self.state = "TAKEOFF"  # TAKEOFF -> RUN
@@ -149,37 +144,38 @@ class L1CmdPosBridge(Node):
         self.status_timer = self.create_timer(1.0, self._status_timer_cb)
 
         self.get_logger().info(f"Node started. Publishing takeoff ramp to {self.cmd_topic}")
-        self.get_logger().info("Subscribing to /xend /yend /z_augment /psi_augment /psiend")
+        self.get_logger().info("Subscribing to /x_input /y_input /z_input /psi_input")
         self.get_logger().info(
-            f"Freshness timeout: {self.input_timeout_sec:.3f}s. "
-            "Inputs older than this are treated as missing/stale."
+            f"ZOH behavior: publishing at {self.publish_rate_hz:.1f} Hz; "
+            "switch to a new set only when all 4 topics updated since last switch."
         )
 
     # ----------------------------
-    # Input callbacks (store value + timestamp)
+    # Input callbacks (store value + timestamp + bump seq)
     # ----------------------------
-    def _xend_cb(self, msg: Float64):
-        self.xend = float(msg.data)
-        self.xend_t = self.get_clock().now()
+    def _x_cb(self, msg: Float64):
+        self._x_val = float(msg.data)
+        self._x_t = self.get_clock().now()
+        self._x_seq += 1
+        self._debug_log_inputs()
 
-    def _yend_cb(self, msg: Float64):
-        self.yend = float(msg.data)
-        self.yend_t = self.get_clock().now()
+    def _y_cb(self, msg: Float64):
+        self._y_val = float(msg.data)
+        self._y_t = self.get_clock().now()
+        self._y_seq += 1
+        self._debug_log_inputs()
 
-    def _zaug_cb(self, msg: Float64):
-        self.zaug = float(msg.data)
-        self.zaug_t = self.get_clock().now()
-        self._debug_log_zaugment(self.zaug)
+    def _z_cb(self, msg: Float64):
+        self._z_val = float(msg.data)
+        self._z_t = self.get_clock().now()
+        self._z_seq += 1
+        self._debug_log_inputs()
 
-    def _paug_cb(self, msg: Float64):
-        # Not used for yaw command in this bridge (we use /psiend),
-        # but we subscribe to confirm augmentation topic is alive and latched.
-        # If you ever want yaw augmentation, you can switch yaw_cmd to this.
-        _ = float(msg.data)
-
-    def _psiend_cb(self, msg: Float64):
-        self.psiend = float(msg.data)
-        self.psiend_t = self.get_clock().now()
+    def _psi_cb(self, msg: Float64):
+        self._psi_val = float(msg.data)
+        self._psi_t = self.get_clock().now()
+        self._psi_seq += 1
+        self._debug_log_inputs()
 
     # ----------------------------
     # /l1_status publisher
@@ -210,88 +206,124 @@ class L1CmdPosBridge(Node):
 
             if alpha >= 1.0:
                 self.state = "RUN"
-                self.get_logger().info("Takeoff complete. Publishing /l1_status = 1 and forwarding commands.")
+                self.get_logger().info("Takeoff complete. Publishing /l1_status = 1 and forwarding ZOH commands.")
             return
 
-        # RUN mode
-        ok, missing = self._inputs_ok(now)
-        if not ok:
-            self._log_missing_inputs_throttled(2.0, missing)
-            # Keep hovering safely
+        # RUN mode:
+        # 1) Try to commit a new (x,y,z,psi) set if ALL four updated since last commit
+        self._try_commit_new_set()
+
+        # 2) If we don't have any committed set yet, hover safely
+        if not self._have_committed_set:
+            self._log_missing_inputs_throttled(2.0)
             self._publish_cmd(self.x0, self.y0, self.takeoff_height, self.yaw0)
             return
 
-        # Forward commands (values are guaranteed present + fresh here)
-        x_cmd = self._finite_or(self.xend, self.x0)
-        y_cmd = self._finite_or(self.yend, self.y0)
-        z_cmd = self._finite_or(self.zaug, self.takeoff_height)
-        yaw_cmd = self._finite_or(self.psiend, self.yaw0)
+        # 3) Optionally warn if inputs are very old (but do NOT stop)
+        self._warn_if_stale_throttled(now, period_sec=2.0)
 
-        self._publish_cmd(x_cmd, y_cmd, z_cmd, yaw_cmd)
+        # 4) Publish the current committed set (ZOH) at high rate
+        self._publish_cmd(self._cmd_x, self._cmd_y, self._cmd_z, self._cmd_psi)
 
     # ----------------------------
-    # Freshness / validity checks
+    # Commit logic: switch only when all 4 topics updated
     # ----------------------------
-    def _inputs_ok(self, now) -> tuple[bool, list[str]]:
-        missing = []
+    def _try_commit_new_set(self):
+        # Need at least one message from each topic
+        if self._x_val is None or self._y_val is None or self._z_val is None or self._psi_val is None:
+            return
 
-        # We treat "missing" as either:
-        #   - never received (timestamp None), OR
-        #   - stale (> input_timeout_sec old)
-        def is_fresh(tstamp):
-            if tstamp is None:
-                return False
-            age = (now - tstamp).nanoseconds * 1e-9
-            return age <= self.input_timeout_sec
+        cur_seq = (self._x_seq, self._y_seq, self._z_seq, self._psi_seq)
 
-        if not is_fresh(self.xend_t):
-            missing.append("/xend")
-        if not is_fresh(self.yend_t):
-            missing.append("/yend")
-        if not is_fresh(self.zaug_t):
-            missing.append("/z_augment")
-        if not is_fresh(self.psiend_t):
-            missing.append("/psiend")
+        # Commit new set only if ALL four sequences advanced since last commit
+        if (cur_seq[0] > self._committed_seq[0] and
+            cur_seq[1] > self._committed_seq[1] and
+            cur_seq[2] > self._committed_seq[2] and
+            cur_seq[3] > self._committed_seq[3]):
 
-        return (len(missing) == 0), missing
+            self._cmd_x = self._finite_or(self._x_val, self._cmd_x)
+            self._cmd_y = self._finite_or(self._y_val, self._cmd_y)
+            self._cmd_z = self._finite_or(self._z_val, self._cmd_z)
+            self._cmd_psi = self._finite_or(self._psi_val, self._cmd_psi)
+
+            self._committed_seq = cur_seq
+            if not self._have_committed_set:
+                self._have_committed_set = True
+
+            self.get_logger().info(
+                f"[COMMIT] New set committed: x={self._cmd_x:.4f} y={self._cmd_y:.4f} "
+                f"z={self._cmd_z:.4f} psi={self._cmd_psi:.4f} | seq={self._committed_seq}"
+            )
 
     # ----------------------------
     # Logging helpers
     # ----------------------------
-    def _log_missing_inputs_throttled(self, period_sec: float, missing: list[str]):
+    def _log_missing_inputs_throttled(self, period_sec: float):
         now_sec = self.get_clock().now().nanoseconds * 1e-9
         if (now_sec - self._last_missing_log_time_sec) < period_sec:
             return
 
-        # Also report ages for quick diagnosis
-        ages = []
-        now = self.get_clock().now()
-
-        def age_str(name, tstamp):
-            if tstamp is None:
-                return f"{name}: never"
-            age = (now - tstamp).nanoseconds * 1e-9
-            return f"{name}: {age:.3f}s"
-
-        ages.append(age_str("/xend", self.xend_t))
-        ages.append(age_str("/yend", self.yend_t))
-        ages.append(age_str("/z_augment", self.zaug_t))
-        ages.append(age_str("/psiend", self.psiend_t))
+        missing = []
+        if self._x_val is None: missing.append("/x_input")
+        if self._y_val is None: missing.append("/y_input")
+        if self._z_val is None: missing.append("/z_input")
+        if self._psi_val is None: missing.append("/psi_input")
 
         self.get_logger().warn(
-            f"RUN mode but missing/stale inputs: {', '.join(missing)}. "
-            f"Holding hover. Ages: [{'; '.join(ages)}]"
+            f"RUN mode but no committed set yet (waiting for first full set). "
+            f"Missing: {', '.join(missing) if missing else 'none'}"
         )
         self._last_missing_log_time_sec = now_sec
 
-    def _debug_log_zaugment(self, z_val: float):
-        if not self.debug_zaugment:
+    def _debug_log_inputs(self):
+        if not self.debug_inputs:
             return
         now_sec = self.get_clock().now().nanoseconds * 1e-9
-        if (now_sec - self._last_zaug_debug_log_time_sec) < self.debug_zaugment_period_sec:
+        if (now_sec - self._last_debug_log_time_sec) < self.debug_period_sec:
             return
-        self.get_logger().info(f"[rx] /z_augment = {z_val:.6f}")
-        self._last_zaug_debug_log_time_sec = now_sec
+
+        def fmt(v):
+            return "None" if v is None else f"{v:.4f}"
+
+        self.get_logger().info(
+            f"[rx] x={fmt(self._x_val)} y={fmt(self._y_val)} z={fmt(self._z_val)} psi={fmt(self._psi_val)} | "
+            f"seq=({self._x_seq},{self._y_seq},{self._z_seq},{self._psi_seq})"
+        )
+        self._last_debug_log_time_sec = now_sec
+
+    def _warn_if_stale_throttled(self, now, period_sec: float):
+        if self.input_timeout_sec <= 0.0:
+            return
+
+        now_sec = now.nanoseconds * 1e-9
+        if (now_sec - self._last_stale_warn_time_sec) < period_sec:
+            return
+
+        def age(tstamp):
+            if tstamp is None:
+                return None
+            return (now - tstamp).nanoseconds * 1e-9
+
+        ages = {
+            "/x_input": age(self._x_t),
+            "/y_input": age(self._y_t),
+            "/z_input": age(self._z_t),
+            "/psi_input": age(self._psi_t),
+        }
+
+        stale = {k: v for k, v in ages.items() if (v is None) or (v > self.input_timeout_sec)}
+        if stale:
+            parts = []
+            for k, v in stale.items():
+                if v is None:
+                    parts.append(f"{k}: never")
+                else:
+                    parts.append(f"{k}: {v:.3f}s")
+            self.get_logger().warn(
+                f"Inputs are older than input_timeout_sec={self.input_timeout_sec:.3f}s "
+                f"(but continuing ZOH): {', '.join(parts)}"
+            )
+            self._last_stale_warn_time_sec = now_sec
 
     # ----------------------------
     # Utilities
@@ -328,4 +360,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
