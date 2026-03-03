@@ -35,9 +35,9 @@ class L1CmdPosBridge(Node):
         # Parameters
         # ----------------------------
         self.declare_parameter("cf_name", "cf231")
-        self.declare_parameter("takeoff_height", 0.5)
+        self.declare_parameter("takeoff_height", 0.6)
         self.declare_parameter("takeoff_duration", 2.0)
-        self.declare_parameter("publish_rate_hz", 20.0)
+        self.declare_parameter("publish_rate_hz", 100.0)
 
         self.declare_parameter("x0", 0.0)
         self.declare_parameter("y0", 1.2)
