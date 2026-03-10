@@ -115,6 +115,7 @@ install(PROGRAMS
   scripts/l1_takeoff_cmdpos.py
   scripts/l1_cmdpos_bridge.py
   scripts/l1_cmdpos_bridge_two_drones_compare.py
+  scripts/l1_cmdpos_bridge_smooth_traj_test.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
