@@ -72,7 +72,7 @@ class L1CmdPosBridge(Node):
 
         # Extraction settings for Bernstein vectors
         self.declare_parameter("extract_ts", 0.05)
-        self.declare_parameter("extract_iter_minus_1", 27.0)
+        self.declare_parameter("extract_iter_minus_1", 21.0)
 
         self.cf_name = str(self.get_parameter("cf_name").value)
         self.takeoff_height = float(self.get_parameter("takeoff_height").value)
