@@ -14,7 +14,7 @@ class ExperimentXY2D(Node):
     def __init__(self) -> None:
         super().__init__('experiment_xy_2d')
 
-        self.show_station_numbers = True
+        self.show_station_numbers = False
 
         self.declare_parameter('frame_id', 'world')
         self.declare_parameter('marker_topic', '/experiment_xy_2d_markers')

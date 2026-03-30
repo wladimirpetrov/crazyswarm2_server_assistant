@@ -18,7 +18,7 @@ class ExperimentXYZPsi3D(Node):
         # Easy on/off switch in code for station numbers
         # Change to False if you want labels hidden
         # ------------------------------------------------------------
-        self.show_station_numbers = True
+        self.show_station_numbers = False
 
         self.declare_parameter('frame_id', 'world')
         self.declare_parameter('marker_topic', '/experiment_xyzpsi_3d_markers')
