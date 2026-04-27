@@ -39,7 +39,7 @@ class PlottingDrones(Node):
         self.declare_parameter('source_root_frame', 'cf231')
 
         self.declare_parameter('desired_robot_name', 'p_ref')
-        self.declare_parameter('augmented_robot_name', 'p___')
+        self.declare_parameter('augmented_robot_name', 'p_aug')
         self.declare_parameter('desired_root_frame', '')
         self.declare_parameter('augmented_root_frame', '')
 

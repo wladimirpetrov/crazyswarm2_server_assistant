@@ -125,6 +125,7 @@ install(PROGRAMS
   scripts/experiment_xyzpsi_3d.py
   scripts/experiment_z_2d.py
   scripts/experiment_xy_2d.py
+  scripts/l1_cmdpos_bridge_ajbp_dc_diff_tau.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
