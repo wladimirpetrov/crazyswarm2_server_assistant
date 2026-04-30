@@ -128,6 +128,7 @@ install(PROGRAMS
   scripts/l1_cmdpos_bridge_ajbp_dc_diff_tau.py
   scripts/l1_cmdpos_bridge_ajbp_dc_diff_tau_obs.py
   scripts/experiment_mpp_obs.py
+  scripts/extract_iter_keyboard_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

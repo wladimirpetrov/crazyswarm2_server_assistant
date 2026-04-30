@@ -36,7 +36,7 @@ class BernsteinTrajectoryPlayer(Node):
         self.declare_parameter('tf', 0.9)
         self.declare_parameter('num_dense_points', 20)
 
-        self.declare_parameter('expected_vector_length', 6)
+        self.declare_parameter('expected_vector_length', 5)
         self.declare_parameter('strict_vector_length', True)
 
         self.x_topic = self.get_parameter('x_topic').get_parameter_value().string_value
