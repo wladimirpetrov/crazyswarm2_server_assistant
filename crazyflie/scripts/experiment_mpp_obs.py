@@ -28,10 +28,17 @@ class ExperimentZ2D(Node):
         self.declare_parameter('station_cube_down_z', 0.005)
         self.declare_parameter('station_cube_up_z', 0.03)
 
+        # Start station color: blue
         self.declare_parameter('station_color_r', 0.0)
         self.declare_parameter('station_color_g', 0.3)
         self.declare_parameter('station_color_b', 1.0)
         self.declare_parameter('station_color_a', 0.25)
+
+        # Target station color: green
+        self.declare_parameter('target_station_color_r', 0.0)
+        self.declare_parameter('target_station_color_g', 1.0)
+        self.declare_parameter('target_station_color_b', 0.2)
+        self.declare_parameter('target_station_color_a', 0.45)
 
         # ============================================================
         # Desired path settings
@@ -66,8 +73,6 @@ class ExperimentZ2D(Node):
         # Diameter: 0.30 m
         # Height:   1.20 m
         # Base z:   0.00 m
-        #
-        # Therefore each cylinder center is placed at z = 0.60 m.
         # ============================================================
 
         self.declare_parameter(
@@ -88,20 +93,23 @@ class ExperimentZ2D(Node):
         self.declare_parameter('obstacle_color_a', 0.65)
 
         # ============================================================
-        # Waypoints
+        # Two stations / waypoints
+        #
+        # Station 1: start station, blue
+        # Station 2: target station, green
+        #
+        # These two points are connected by the LINE_STRIP marker.
         # ============================================================
 
         self.declare_parameter(
             'waypoints_xyz',
             [
-                0.0, 1.2, 0.6,
-                0.0, 1.2, 1.0,
-                0.0, 1.2, 0.7,
-                0.0, 1.2, 0.3,
+                -1.2, 1.8, 0.6,
+                 1.2, 1.8, 0.6,
             ]
         )
 
-        self.declare_parameter('waypoint_yaw_deg', [0.0, 0.0, 0.0, 0.0])
+        self.declare_parameter('waypoint_yaw_deg', [0.0, 0.0])
 
         # ============================================================
         # Read parameters
@@ -119,6 +127,11 @@ class ExperimentZ2D(Node):
         self.station_color_g = self.get_parameter('station_color_g').get_parameter_value().double_value
         self.station_color_b = self.get_parameter('station_color_b').get_parameter_value().double_value
         self.station_color_a = self.get_parameter('station_color_a').get_parameter_value().double_value
+
+        self.target_station_color_r = self.get_parameter('target_station_color_r').get_parameter_value().double_value
+        self.target_station_color_g = self.get_parameter('target_station_color_g').get_parameter_value().double_value
+        self.target_station_color_b = self.get_parameter('target_station_color_b').get_parameter_value().double_value
+        self.target_station_color_a = self.get_parameter('target_station_color_a').get_parameter_value().double_value
 
         self.path_color_r = self.get_parameter('path_color_r').get_parameter_value().double_value
         self.path_color_g = self.get_parameter('path_color_g').get_parameter_value().double_value
@@ -234,13 +247,18 @@ class ExperimentZ2D(Node):
         y: float,
         z: float,
         yaw: float,
+        is_target_station: bool,
     ) -> Marker:
         m = Marker()
 
         m.header.frame_id = self.frame_id
         m.header.stamp = self.get_clock().now().to_msg()
 
-        m.ns = 'station_cubes'
+        if is_target_station:
+            m.ns = 'target_station_cube'
+        else:
+            m.ns = 'station_cubes'
+
         m.id = marker_id
         m.type = Marker.CUBE
         m.action = Marker.ADD
@@ -262,10 +280,16 @@ class ExperimentZ2D(Node):
         m.scale.y = self.station_cube_size_xy
         m.scale.z = self.station_cube_down_z + self.station_cube_up_z
 
-        m.color.r = self.station_color_r
-        m.color.g = self.station_color_g
-        m.color.b = self.station_color_b
-        m.color.a = self.station_color_a
+        if is_target_station:
+            m.color.r = self.target_station_color_r
+            m.color.g = self.target_station_color_g
+            m.color.b = self.target_station_color_b
+            m.color.a = self.target_station_color_a
+        else:
+            m.color.r = self.station_color_r
+            m.color.g = self.station_color_g
+            m.color.b = self.station_color_b
+            m.color.a = self.station_color_a
 
         m.lifetime.sec = 0
         m.frame_locked = False
@@ -288,10 +312,6 @@ class ExperimentZ2D(Node):
         m.type = Marker.CYLINDER
         m.action = Marker.ADD
 
-        # Cylinder center position.
-        # The obstacle base is at obstacle_base_z.
-        # Since RViz places a cylinder at its center,
-        # z position must be base_z + height / 2.
         m.pose.position.x = x
         m.pose.position.y = y
         m.pose.position.z = self.obstacle_base_z + 0.5 * self.obstacle_height
@@ -301,10 +321,6 @@ class ExperimentZ2D(Node):
         m.pose.orientation.z = 0.0
         m.pose.orientation.w = 1.0
 
-        # For Marker.CYLINDER:
-        # scale.x = diameter along x
-        # scale.y = diameter along y
-        # scale.z = height along z
         m.scale.x = self.obstacle_diameter
         m.scale.y = self.obstacle_diameter
         m.scale.z = self.obstacle_height
@@ -408,11 +424,15 @@ class ExperimentZ2D(Node):
         marker_id = 0
 
         # ============================================================
-        # Draw station cubes
+        # Draw two stations:
+        #   station 1 = blue start station
+        #   station 2 = green target station
         # ============================================================
 
         for i, (pt, yaw) in enumerate(zip(self.waypoints, self.yaw_rad), start=1):
             x, y, z = pt
+
+            is_target_station = i == len(self.waypoints)
 
             arr.markers.append(
                 self.make_station_cube_marker(
@@ -421,6 +441,7 @@ class ExperimentZ2D(Node):
                     y=y,
                     z=z,
                     yaw=yaw,
+                    is_target_station=is_target_station,
                 )
             )
             marker_id += 1
@@ -452,7 +473,7 @@ class ExperimentZ2D(Node):
             marker_id += 1
 
         # ============================================================
-        # Draw desired path
+        # Draw desired path connecting the two stations
         # ============================================================
 
         arr.markers.append(self.make_path_marker(marker_id))

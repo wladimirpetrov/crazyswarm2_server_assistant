@@ -47,6 +47,18 @@ class L1CmdPosBridge(Node):
       - always command x0, y0
       - still compute and print extracted Bernstein x/y point for debugging
       - still use fixed_z_cmd and fixed_psi_cmd
+
+    Final-capture behavior:
+      - controlled by final_capture_enabled
+      - if final_capture_enabled = False, node behaves normally
+      - if final_capture_enabled = True, before publishing normal RUN commands,
+        check distance from actual x/y to final_target_x/final_target_y
+      - if actual x/y is within final_trigger_radius and latest MPP vector endpoints
+        are close to final_target_x/final_target_y, freeze the current x/y vectors
+      - sample final_num_points points from those frozen vectors
+      - publish only those frozen sampled points
+      - after the final sampled trajectory is finished, keep hovering at
+        final_target_x/final_target_y
     """
 
     def __init__(self):
@@ -99,12 +111,30 @@ class L1CmdPosBridge(Node):
         self.declare_parameter("segment_lambda_percent", 0.10)
 
         # Interpolation mode parameters
-        self.declare_parameter("interp_duration_sec", 0.03) #0.1
+        self.declare_parameter("interp_duration_sec", 0.025)
 
         # Extraction settings for one-point Bernstein evaluation
         self.declare_parameter("extract_ts", 0.05)
-        self.declare_parameter("extract_iter_minus_1_x", 27.0)
-        self.declare_parameter("extract_iter_minus_1_y", 27.0)
+        self.declare_parameter("extract_iter_minus_1_x", 35.0)
+        self.declare_parameter("extract_iter_minus_1_y", 35.0)
+
+        # ----------------------------
+        # Final-capture / vector-storage feature
+        # ----------------------------
+        # Default is False so your normal MPP/interpolation behavior is unchanged
+        # unless you explicitly turn this feature ON.
+        #
+        # Turn ON:
+        #   ros2 param set /l1_cmdpos_bridge final_capture_enabled true
+        #
+        # Turn OFF:
+        #   ros2 param set /l1_cmdpos_bridge final_capture_enabled false
+        self.declare_parameter("final_capture_enabled", True)
+        self.declare_parameter("final_target_x", 1.2)
+        self.declare_parameter("final_target_y", 1.8)
+        self.declare_parameter("final_trigger_radius", 0.8)
+        self.declare_parameter("final_endpoint_tolerance", 0.08)
+        self.declare_parameter("final_num_points", 30)
 
         self.cf_name = str(self.get_parameter("cf_name").value)
         self.takeoff_height = float(self.get_parameter("takeoff_height").value)
@@ -163,6 +193,31 @@ class L1CmdPosBridge(Node):
             self.get_parameter("extract_iter_minus_1_y").value
         )
 
+        self.final_capture_enabled = bool(
+            self.get_parameter("final_capture_enabled").value
+        )
+        self.final_target_x = float(self.get_parameter("final_target_x").value)
+        self.final_target_y = float(self.get_parameter("final_target_y").value)
+
+        self.final_trigger_radius = float(
+            self.get_parameter("final_trigger_radius").value
+        )
+        if self.final_trigger_radius < 0.0:
+            self.get_logger().warn("final_trigger_radius must be >= 0. Using 0.8.")
+            self.final_trigger_radius = 0.8
+
+        self.final_endpoint_tolerance = float(
+            self.get_parameter("final_endpoint_tolerance").value
+        )
+        if self.final_endpoint_tolerance < 0.0:
+            self.get_logger().warn("final_endpoint_tolerance must be >= 0. Using 0.08.")
+            self.final_endpoint_tolerance = 0.08
+
+        self.final_num_points = int(self.get_parameter("final_num_points").value)
+        if self.final_num_points < 2:
+            self.get_logger().warn("final_num_points must be >= 2. Using 30.")
+            self.final_num_points = 30
+
         pose_topic_param = str(self.get_parameter("pose_topic").value).strip()
         if pose_topic_param:
             self.pose_topic = pose_topic_param
@@ -211,9 +266,6 @@ class L1CmdPosBridge(Node):
             Float64, "/y_augment", self._yend_cb, self.qos_rel
         )
 
-        # Button topic:
-        # Every Empty message on /increase_extract_iter increases both
-        # extract_iter_minus_1_x and extract_iter_minus_1_y by +1.
         self.increase_extract_iter_sub = self.create_subscription(
             Empty,
             "/increase_extract_iter",
@@ -277,6 +329,15 @@ class L1CmdPosBridge(Node):
         self._interp_goal_z = self.fixed_z_cmd
         self._interp_goal_psi = self.fixed_psi_cmd
 
+        # Final-capture state
+        self._final_capture_active = False
+        self._final_hover_active = False
+        self._final_buffer = []
+        self._final_buffer_index = 0
+        self._final_stored_x_vec = None
+        self._final_stored_y_vec = None
+        self._final_captured_seq = (0, 0)
+
         # Last actually published command
         self._last_pub_x = self.x0
         self._last_pub_y = self.y0
@@ -289,6 +350,7 @@ class L1CmdPosBridge(Node):
         self._last_stale_warn_time_sec = -1e9
         self._last_interp_log_time_sec = -1e9
         self._last_publish_log_time_sec = -1e9
+        self._last_final_capture_check_log_time_sec = -1e9
 
         # Debug print throttling for extracted point in block_xy mode
         self._last_block_extract_log_time_sec = -1e9
@@ -324,6 +386,13 @@ class L1CmdPosBridge(Node):
         self.get_logger().info(
             f"Fixed z={self.fixed_z_cmd:.4f}, fixed psi={self.fixed_psi_cmd:.4f}"
         )
+        self.get_logger().info(
+            f"Final capture config: enabled={self.final_capture_enabled}, "
+            f"target=({self.final_target_x:.4f}, {self.final_target_y:.4f}), "
+            f"trigger_radius={self.final_trigger_radius:.4f}, "
+            f"endpoint_tolerance={self.final_endpoint_tolerance:.4f}, "
+            f"num_points={self.final_num_points}"
+        )
 
     # ----------------------------
     # Runtime parameter update callback
@@ -342,24 +411,22 @@ class L1CmdPosBridge(Node):
                 self.block_xy_updates = new_value
 
                 if new_value:
-                    # When blocking is turned ON, immediately stop any active interpolation
-                    # or buffered trajectory so the timer publishes fixed x0/y0.
                     self._interp_active = False
                     self._interp_t0 = None
                     self._cmd_buffer = []
                     self._cmd_buffer_index = 0
+                    self._reset_final_capture_state()
 
                     self._cmd_x = self.x0
                     self._cmd_y = self.y0
                     self._cmd_z = self.fixed_z_cmd
                     self._cmd_psi = self.fixed_psi_cmd
                 else:
-                    # When blocking is turned OFF, force the node to recommit the latest
-                    # available x/y vectors instead of continuing an old stale command.
                     self._interp_active = False
                     self._interp_t0 = None
                     self._cmd_buffer = []
                     self._cmd_buffer_index = 0
+                    self._reset_final_capture_state()
                     self._have_committed_set = False
                     self._committed_vec_seq = (0, 0)
 
@@ -378,7 +445,6 @@ class L1CmdPosBridge(Node):
                 old_value = self.extract_iter_minus_1_x
                 self.extract_iter_minus_1_x = float(param.value)
 
-                # Force recommit using latest available vector and new extraction index.
                 self._interp_active = False
                 self._interp_t0 = None
                 self._cmd_buffer = []
@@ -401,7 +467,6 @@ class L1CmdPosBridge(Node):
                 old_value = self.extract_iter_minus_1_y
                 self.extract_iter_minus_1_y = float(param.value)
 
-                # Force recommit using latest available vector and new extraction index.
                 self._interp_active = False
                 self._interp_t0 = None
                 self._cmd_buffer = []
@@ -412,6 +477,135 @@ class L1CmdPosBridge(Node):
                 self.get_logger().warn(
                     f"[PARAM UPDATE] extract_iter_minus_1_y changed: "
                     f"{old_value:.3f} -> {self.extract_iter_minus_1_y:.3f}"
+                )
+
+            elif param.name == "final_capture_enabled":
+                if param.type_ != Parameter.Type.BOOL:
+                    return SetParametersResult(
+                        successful=False,
+                        reason="final_capture_enabled must be a boolean: true or false",
+                    )
+
+                old_value = self.final_capture_enabled
+                new_value = bool(param.value)
+                self.final_capture_enabled = new_value
+
+                # Important:
+                # If final capture is turned OFF while it is active or hovering,
+                # immediately clear the frozen vectors and force a fresh normal commit.
+                self._reset_final_capture_state()
+                self._interp_active = False
+                self._interp_t0 = None
+                self._cmd_buffer = []
+                self._cmd_buffer_index = 0
+                self._have_committed_set = False
+                self._committed_vec_seq = (0, 0)
+
+                self.get_logger().warn(
+                    f"[PARAM UPDATE] final_capture_enabled changed: "
+                    f"{old_value} -> {new_value}. "
+                    f"Final stored-vector state reset."
+                )
+
+            elif param.name == "final_target_x":
+                if param.type_ not in (Parameter.Type.DOUBLE, Parameter.Type.INTEGER):
+                    return SetParametersResult(
+                        successful=False,
+                        reason="final_target_x must be numeric",
+                    )
+
+                old_value = self.final_target_x
+                self.final_target_x = float(param.value)
+                self._reset_final_capture_state()
+
+                self.get_logger().warn(
+                    f"[PARAM UPDATE] final_target_x changed: "
+                    f"{old_value:.6f} -> {self.final_target_x:.6f}"
+                )
+
+            elif param.name == "final_target_y":
+                if param.type_ not in (Parameter.Type.DOUBLE, Parameter.Type.INTEGER):
+                    return SetParametersResult(
+                        successful=False,
+                        reason="final_target_y must be numeric",
+                    )
+
+                old_value = self.final_target_y
+                self.final_target_y = float(param.value)
+                self._reset_final_capture_state()
+
+                self.get_logger().warn(
+                    f"[PARAM UPDATE] final_target_y changed: "
+                    f"{old_value:.6f} -> {self.final_target_y:.6f}"
+                )
+
+            elif param.name == "final_trigger_radius":
+                if param.type_ not in (Parameter.Type.DOUBLE, Parameter.Type.INTEGER):
+                    return SetParametersResult(
+                        successful=False,
+                        reason="final_trigger_radius must be numeric",
+                    )
+
+                new_value = float(param.value)
+                if new_value < 0.0:
+                    return SetParametersResult(
+                        successful=False,
+                        reason="final_trigger_radius must be >= 0",
+                    )
+
+                old_value = self.final_trigger_radius
+                self.final_trigger_radius = new_value
+                self._reset_final_capture_state()
+
+                self.get_logger().warn(
+                    f"[PARAM UPDATE] final_trigger_radius changed: "
+                    f"{old_value:.6f} -> {self.final_trigger_radius:.6f}"
+                )
+
+            elif param.name == "final_endpoint_tolerance":
+                if param.type_ not in (Parameter.Type.DOUBLE, Parameter.Type.INTEGER):
+                    return SetParametersResult(
+                        successful=False,
+                        reason="final_endpoint_tolerance must be numeric",
+                    )
+
+                new_value = float(param.value)
+                if new_value < 0.0:
+                    return SetParametersResult(
+                        successful=False,
+                        reason="final_endpoint_tolerance must be >= 0",
+                    )
+
+                old_value = self.final_endpoint_tolerance
+                self.final_endpoint_tolerance = new_value
+                self._reset_final_capture_state()
+
+                self.get_logger().warn(
+                    f"[PARAM UPDATE] final_endpoint_tolerance changed: "
+                    f"{old_value:.6f} -> {self.final_endpoint_tolerance:.6f}"
+                )
+
+            elif param.name == "final_num_points":
+                if param.type_ not in (Parameter.Type.INTEGER, Parameter.Type.DOUBLE):
+                    return SetParametersResult(
+                        successful=False,
+                        reason="final_num_points must be numeric",
+                    )
+
+                new_value = int(param.value)
+                if new_value < 2:
+                    return SetParametersResult(
+                        successful=False,
+                        reason="final_num_points must be >= 2",
+                    )
+
+                old_value = self.final_num_points
+                self.final_num_points = new_value
+                self._reset_final_capture_state()
+
+                self.get_logger().warn(
+                    f"[PARAM UPDATE] final_num_points changed: "
+                    f"{old_value} -> {self.final_num_points}"
                 )
 
         return SetParametersResult(successful=True)
@@ -510,9 +704,7 @@ class L1CmdPosBridge(Node):
 
             if alpha >= 1.0:
                 self.state = "RUN"
-                self.get_logger().info(
-                    "Takeoff complete. RUN mode started."
-                )
+                self.get_logger().info("Takeoff complete. RUN mode started.")
             return
 
         # If blocking xy updates, ignore all trajectory data and keep x0/y0,
@@ -533,6 +725,22 @@ class L1CmdPosBridge(Node):
                 source="BLOCK_XY",
             )
             return
+
+        # ------------------------------------------------------------
+        # Final-capture layer.
+        # This block is active only when final_capture_enabled = True.
+        # When disabled, the node behaves like the normal original node.
+        # ------------------------------------------------------------
+        if self.final_capture_enabled:
+            if self._final_capture_active or self._final_hover_active:
+                x_cmd, y_cmd, z_cmd, psi_cmd, source = self._get_next_final_capture_cmd()
+                self._publish_cmd(x_cmd, y_cmd, z_cmd, psi_cmd, source=source)
+                return
+
+            if self._try_start_final_capture(now):
+                x_cmd, y_cmd, z_cmd, psi_cmd, source = self._get_next_final_capture_cmd()
+                self._publish_cmd(x_cmd, y_cmd, z_cmd, psi_cmd, source=source)
+                return
 
         self._try_commit_new_command(now)
 
@@ -565,11 +773,243 @@ class L1CmdPosBridge(Node):
             )
 
     # ----------------------------
+    # Final-capture logic
+    # ----------------------------
+    def _reset_final_capture_state(self):
+        self._final_capture_active = False
+        self._final_hover_active = False
+        self._final_buffer = []
+        self._final_buffer_index = 0
+        self._final_stored_x_vec = None
+        self._final_stored_y_vec = None
+        self._final_captured_seq = (0, 0)
+
+    def _try_start_final_capture(self, now):
+        if not self.final_capture_enabled:
+            return False
+
+        if not self.enable_bernstein_correction:
+            return False
+
+        if self._final_capture_active or self._final_hover_active:
+            return True
+
+        if self._act_x is None or self._act_y is None:
+            return False
+
+        if self._x_vec is None or self._y_vec is None:
+            return False
+
+        npx = len(self._x_vec)
+        npy = len(self._y_vec)
+
+        if npx == 0 or npy == 0:
+            return False
+
+        if npx != npy:
+            return False
+
+        dx = self._act_x - self.final_target_x
+        dy = self._act_y - self.final_target_y
+        distance_to_target = math.hypot(dx, dy)
+
+        raw_endpoint_x = float(self._x_vec[-1])
+        raw_endpoint_y = float(self._y_vec[-1])
+
+        endpoint_x_error = abs(raw_endpoint_x - self.final_target_x)
+        endpoint_y_error = abs(raw_endpoint_y - self.final_target_y)
+
+        actual_is_near_target = distance_to_target <= self.final_trigger_radius
+        endpoint_is_target = (
+            endpoint_x_error <= self.final_endpoint_tolerance
+            and endpoint_y_error <= self.final_endpoint_tolerance
+        )
+
+        now_sec = now.nanoseconds * 1e-9
+        if (now_sec - self._last_final_capture_check_log_time_sec) >= 1.0:
+            self.get_logger().info(
+                f"[FINAL CHECK] enabled={self.final_capture_enabled} | "
+                f"actual=({self._act_x:.6f}, {self._act_y:.6f}), "
+                f"target=({self.final_target_x:.6f}, {self.final_target_y:.6f}), "
+                f"distance={distance_to_target:.6f}, "
+                f"trigger_radius={self.final_trigger_radius:.6f}, "
+                f"raw_endpoint=({raw_endpoint_x:.6f}, {raw_endpoint_y:.6f}), "
+                f"endpoint_error=({endpoint_x_error:.6f}, {endpoint_y_error:.6f}), "
+                f"endpoint_tolerance={self.final_endpoint_tolerance:.6f}"
+            )
+            self._last_final_capture_check_log_time_sec = now_sec
+
+        if not actual_is_near_target:
+            return False
+
+        if not endpoint_is_target:
+            return False
+
+        # Store the raw vectors exactly as received from MPP.
+        self._final_stored_x_vec = list(self._x_vec)
+        self._final_stored_y_vec = list(self._y_vec)
+        self._final_captured_seq = (self._x_vec_seq, self._y_vec_seq)
+
+        # Work vectors for final execution.
+        # We anchor the first point to the current actual position to avoid a jump,
+        # and force the last point to the exact requested final target.
+        x_final = list(self._final_stored_x_vec)
+        y_final = list(self._final_stored_y_vec)
+
+        x_final[0] = float(self._act_x)
+        y_final[0] = float(self._act_y)
+        x_final[-1] = float(self.final_target_x)
+        y_final[-1] = float(self.final_target_y)
+
+        x_points = self._sample_full_bernstein_trajectory(
+            x_final,
+            self.final_num_points,
+        )
+        y_points = self._sample_full_bernstein_trajectory(
+            y_final,
+            self.final_num_points,
+        )
+
+        if len(x_points) != self.final_num_points or len(y_points) != self.final_num_points:
+            self.get_logger().warn(
+                "[FINAL CAPTURE] Failed to sample final trajectory. "
+                "Continuing normal commands."
+            )
+            self._reset_final_capture_state()
+            return False
+
+        self._final_buffer = []
+        for i in range(self.final_num_points):
+            self._final_buffer.append(
+                (
+                    x_points[i],
+                    y_points[i],
+                    self.fixed_z_cmd,
+                    self.fixed_psi_cmd,
+                )
+            )
+
+        self._final_buffer_index = 0
+        self._final_capture_active = True
+        self._final_hover_active = False
+
+        # Stop old normal trajectory/interpolation immediately.
+        self._interp_active = False
+        self._interp_t0 = None
+        self._cmd_buffer = []
+        self._cmd_buffer_index = 0
+
+        self.get_logger().warn(
+            f"[FINAL CAPTURE STARTED] "
+            f"actual=({self._act_x:.6f}, {self._act_y:.6f}), "
+            f"target=({self.final_target_x:.6f}, {self.final_target_y:.6f}), "
+            f"distance={distance_to_target:.6f} <= {self.final_trigger_radius:.6f}, "
+            f"raw_endpoint=({raw_endpoint_x:.6f}, {raw_endpoint_y:.6f}), "
+            f"endpoint_error=({endpoint_x_error:.6f}, {endpoint_y_error:.6f}), "
+            f"stored_seq={self._final_captured_seq}, "
+            f"sampled_points={self.final_num_points}. "
+            f"No new MPP x/y vectors will be used now unless final_capture_enabled is set to false."
+        )
+
+        return True
+
+    def _get_next_final_capture_cmd(self):
+        if not self.final_capture_enabled:
+            self._reset_final_capture_state()
+            return (
+                self._cmd_x,
+                self._cmd_y,
+                self.fixed_z_cmd,
+                self.fixed_psi_cmd,
+                "FINAL_DISABLED",
+            )
+
+        if self._final_hover_active:
+            self._cmd_x = self.final_target_x
+            self._cmd_y = self.final_target_y
+            self._cmd_z = self.fixed_z_cmd
+            self._cmd_psi = self.fixed_psi_cmd
+
+            return (
+                self.final_target_x,
+                self.final_target_y,
+                self.fixed_z_cmd,
+                self.fixed_psi_cmd,
+                "FINAL_HOVER",
+            )
+
+        if not self._final_capture_active:
+            return (
+                self._cmd_x,
+                self._cmd_y,
+                self.fixed_z_cmd,
+                self.fixed_psi_cmd,
+                "FINAL_INACTIVE",
+            )
+
+        if not self._final_buffer:
+            self._final_capture_active = False
+            self._final_hover_active = True
+            self.get_logger().warn(
+                "[FINAL CAPTURE] Empty final buffer. Switching to final hover."
+            )
+            return (
+                self.final_target_x,
+                self.final_target_y,
+                self.fixed_z_cmd,
+                self.fixed_psi_cmd,
+                "FINAL_HOVER",
+            )
+
+        if self._final_buffer_index < len(self._final_buffer):
+            cmd = self._final_buffer[self._final_buffer_index]
+            self._final_buffer_index += 1
+
+            self._cmd_x = cmd[0]
+            self._cmd_y = cmd[1]
+            self._cmd_z = self.fixed_z_cmd
+            self._cmd_psi = self.fixed_psi_cmd
+
+            if self._final_buffer_index == len(self._final_buffer):
+                self.get_logger().warn(
+                    "[FINAL CAPTURE] Last sampled final point is being published. "
+                    "Next command will switch to final hover."
+                )
+
+            return cmd[0], cmd[1], self.fixed_z_cmd, self.fixed_psi_cmd, "FINAL_CAPTURE"
+
+        self._final_capture_active = False
+        self._final_hover_active = True
+
+        self._cmd_x = self.final_target_x
+        self._cmd_y = self.final_target_y
+        self._cmd_z = self.fixed_z_cmd
+        self._cmd_psi = self.fixed_psi_cmd
+
+        self.get_logger().warn(
+            f"[FINAL HOVER] Final sampled trajectory finished. "
+            f"Holding target=({self.final_target_x:.6f}, {self.final_target_y:.6f}, "
+            f"{self.fixed_z_cmd:.6f}, {self.fixed_psi_cmd:.6f})."
+        )
+
+        return (
+            self.final_target_x,
+            self.final_target_y,
+            self.fixed_z_cmd,
+            self.fixed_psi_cmd,
+            "FINAL_HOVER",
+        )
+
+    # ----------------------------
     # Commit new command logic
     # ----------------------------
     def _try_commit_new_command(self, now):
         if not self.enable_bernstein_correction:
             return
+
+        if self.final_capture_enabled:
+            if self._final_capture_active or self._final_hover_active:
+                return
 
         if self._x_vec is None or self._y_vec is None:
             return
@@ -941,6 +1381,22 @@ class L1CmdPosBridge(Node):
 
         return samples
 
+    def _sample_full_bernstein_trajectory(self, coeffs, num_points):
+        if not coeffs:
+            return []
+
+        if num_points < 2:
+            raise ValueError("num_points must be at least 2.")
+
+        samples = []
+
+        for i in range(num_points):
+            lam = float(i) / float(num_points - 1)
+            _, _, point = self._decasteljau_split_1d(coeffs, lam)
+            samples.append(float(point))
+
+        return samples
+
     @staticmethod
     def _binom_coeffs(n):
         coeffs = [0.0] * (n + 1)
@@ -1053,6 +1509,10 @@ class L1CmdPosBridge(Node):
 
         if self.block_xy_updates:
             return
+
+        if self.final_capture_enabled:
+            if self._final_capture_active or self._final_hover_active:
+                return
 
         def age(tstamp):
             if tstamp is None:

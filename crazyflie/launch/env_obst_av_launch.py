@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, TimerAction
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+    use_rviz = LaunchConfiguration("use_rviz")
+    output = LaunchConfiguration("output")
+
+    bernstein_trajectory_player_online = Node(
+        package="crazyflie",
+        executable="bernstein_trajectory_player_online.py",
+        name="bernstein_trajectory_player_online",
+        output=output,
+        emulate_tty=True,
+    )
+
+    experiment_mpp_obs = Node(
+        package="crazyflie",
+        executable="experiment_mpp_obs.py",
+        name="experiment_mpp_obs",
+        output=output,
+        emulate_tty=True,
+    )
+
+    lab_floor_iowa = Node(
+        package="crazyflie",
+        executable="lab_floor_iowa.py",
+        name="lab_floor_iowa",
+        output=output,
+        emulate_tty=True,
+    )
+
+    plotting_drones = Node(
+        package="crazyflie",
+        executable="plotting_drones.py",
+        name="plotting_drones",
+        output=output,
+        emulate_tty=True,
+    )
+
+    rviz2 = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        output=output,
+        condition=IfCondition(use_rviz),
+        emulate_tty=True,
+    )
+
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                "use_rviz",
+                default_value="true",
+                description="Start RViz2 together with the Crazyflie visualization/planning nodes.",
+            ),
+            DeclareLaunchArgument(
+                "output",
+                default_value="screen",
+                description="Node output mode.",
+            ),
+
+            bernstein_trajectory_player_online,
+            experiment_mpp_obs,
+            lab_floor_iowa,
+            plotting_drones,
+
+            # Small delay so RViz starts after marker/path publishers are already alive.
+            TimerAction(
+                period=1.0,
+                actions=[rviz2],
+            ),
+        ]
+    )
