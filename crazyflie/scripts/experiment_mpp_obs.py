@@ -66,13 +66,14 @@ class ExperimentZ2D(Node):
         # ============================================================
         # Obstacle settings
         #
-        # Two vertical cylinders:
-        #   Obstacle 1 center: x = -0.6, y = 2.0
+        # Actual obstacles:
+        #   Obstacle 1 center: x = -0.6, y = 1.8
         #   Obstacle 2 center: x =  0.6, y = 1.8
         #
-        # Diameter: 0.30 m
-        # Height:   1.20 m
-        # Base z:   0.00 m
+        # Actual obstacle diameter: 0.30 m
+        # Buffer diameter: actual diameter + 0.10 m = 0.40 m
+        #
+        # The buffer is drawn as a separate transparent cylinder.
         # ============================================================
 
         self.declare_parameter(
@@ -90,7 +91,28 @@ class ExperimentZ2D(Node):
         self.declare_parameter('obstacle_color_r', 1.0)
         self.declare_parameter('obstacle_color_g', 0.2)
         self.declare_parameter('obstacle_color_b', 0.0)
-        self.declare_parameter('obstacle_color_a', 0.65)
+        self.declare_parameter('obstacle_color_a', 0.70)
+
+        # ============================================================
+        # Obstacle buffer settings
+        #
+        # obstacle_buffer_extra_diameter = 0.10 means:
+        #   buffer_diameter = obstacle_diameter + 0.10
+        #
+        # If obstacle_diameter = 0.30,
+        # then visual buffer_diameter = 0.40.
+        # ============================================================
+
+        self.declare_parameter('show_obstacle_buffer', True)
+        self.declare_parameter('obstacle_buffer_extra_diameter', 0.10)
+
+        self.declare_parameter('obstacle_buffer_height', 1.20)
+        self.declare_parameter('obstacle_buffer_base_z', 0.0)
+
+        self.declare_parameter('obstacle_buffer_color_r', 0.6)
+        self.declare_parameter('obstacle_buffer_color_g', 0.0)
+        self.declare_parameter('obstacle_buffer_color_b', 1.0)
+        self.declare_parameter('obstacle_buffer_color_a', 0.35)
 
         # ============================================================
         # Two stations / waypoints
@@ -157,12 +179,41 @@ class ExperimentZ2D(Node):
         self.obstacle_color_b = self.get_parameter('obstacle_color_b').get_parameter_value().double_value
         self.obstacle_color_a = self.get_parameter('obstacle_color_a').get_parameter_value().double_value
 
+        self.show_obstacle_buffer = self.get_parameter('show_obstacle_buffer').get_parameter_value().bool_value
+        self.obstacle_buffer_extra_diameter = (
+            self.get_parameter('obstacle_buffer_extra_diameter')
+            .get_parameter_value()
+            .double_value
+        )
+
+        self.obstacle_buffer_height = self.get_parameter('obstacle_buffer_height').get_parameter_value().double_value
+        self.obstacle_buffer_base_z = self.get_parameter('obstacle_buffer_base_z').get_parameter_value().double_value
+
+        self.obstacle_buffer_color_r = self.get_parameter('obstacle_buffer_color_r').get_parameter_value().double_value
+        self.obstacle_buffer_color_g = self.get_parameter('obstacle_buffer_color_g').get_parameter_value().double_value
+        self.obstacle_buffer_color_b = self.get_parameter('obstacle_buffer_color_b').get_parameter_value().double_value
+        self.obstacle_buffer_color_a = self.get_parameter('obstacle_buffer_color_a').get_parameter_value().double_value
+
         waypoint_flat = list(self.get_parameter('waypoints_xyz').value)
         yaw_deg_list = list(self.get_parameter('waypoint_yaw_deg').value)
         obstacle_flat = list(self.get_parameter('obstacles_xy').value)
 
         if self.publish_rate_hz <= 0.0:
             self.publish_rate_hz = 20.0
+
+        if self.obstacle_diameter <= 0.0:
+            self.get_logger().warn('obstacle_diameter must be > 0. Using 0.30.')
+            self.obstacle_diameter = 0.30
+
+        if self.obstacle_buffer_extra_diameter < 0.0:
+            self.get_logger().warn(
+                'obstacle_buffer_extra_diameter must be >= 0. Using 0.10.'
+            )
+            self.obstacle_buffer_extra_diameter = 0.10
+
+        self.obstacle_buffer_diameter = (
+            self.obstacle_diameter + self.obstacle_buffer_extra_diameter
+        )
 
         self.waypoints = self._parse_waypoints(waypoint_flat)
 
@@ -177,15 +228,19 @@ class ExperimentZ2D(Node):
 
         self.get_logger().info('---------------------------------------------')
         self.get_logger().info('experiment_z_2d started')
-        self.get_logger().info(f'frame_id            : {self.frame_id}')
-        self.get_logger().info(f'marker_topic        : {self.marker_topic}')
-        self.get_logger().info(f'publish_rate_hz     : {self.publish_rate_hz}')
-        self.get_logger().info(f'waypoint_count      : {len(self.waypoints)}')
-        self.get_logger().info(f'obstacle_count      : {len(self.obstacles_xy)}')
-        self.get_logger().info(f'obstacle_diameter   : {self.obstacle_diameter}')
-        self.get_logger().info(f'obstacle_height     : {self.obstacle_height}')
-        self.get_logger().info(f'obstacle_base_z     : {self.obstacle_base_z}')
-        self.get_logger().info(f'show_station_numbers: {self.show_station_numbers}')
+        self.get_logger().info(f'frame_id                    : {self.frame_id}')
+        self.get_logger().info(f'marker_topic                : {self.marker_topic}')
+        self.get_logger().info(f'publish_rate_hz             : {self.publish_rate_hz}')
+        self.get_logger().info(f'waypoint_count              : {len(self.waypoints)}')
+        self.get_logger().info(f'obstacle_count              : {len(self.obstacles_xy)}')
+        self.get_logger().info(f'obstacle_diameter           : {self.obstacle_diameter}')
+        self.get_logger().info(f'obstacle_height             : {self.obstacle_height}')
+        self.get_logger().info(f'obstacle_base_z             : {self.obstacle_base_z}')
+        self.get_logger().info(f'show_obstacle_buffer        : {self.show_obstacle_buffer}')
+        self.get_logger().info(f'obstacle_buffer_diameter    : {self.obstacle_buffer_diameter}')
+        self.get_logger().info(f'obstacle_buffer_extra_diam  : {self.obstacle_buffer_extra_diameter}')
+        self.get_logger().info(f'show_station_numbers        : {self.show_station_numbers}')
+        self.get_logger().info('No fan or airflow markers are used in this scene.')
         self.get_logger().info('---------------------------------------------')
 
     def _parse_waypoints(self, flat: List[float]) -> List[Tuple[float, float, float]]:
@@ -335,6 +390,45 @@ class ExperimentZ2D(Node):
 
         return m
 
+    def make_obstacle_buffer_marker(
+        self,
+        marker_id: int,
+        x: float,
+        y: float,
+    ) -> Marker:
+        m = Marker()
+
+        m.header.frame_id = self.frame_id
+        m.header.stamp = self.get_clock().now().to_msg()
+
+        m.ns = 'obstacle_safety_buffer'
+        m.id = marker_id
+        m.type = Marker.CYLINDER
+        m.action = Marker.ADD
+
+        m.pose.position.x = x
+        m.pose.position.y = y
+        m.pose.position.z = self.obstacle_buffer_base_z + 0.5 * self.obstacle_buffer_height
+
+        m.pose.orientation.x = 0.0
+        m.pose.orientation.y = 0.0
+        m.pose.orientation.z = 0.0
+        m.pose.orientation.w = 1.0
+
+        m.scale.x = self.obstacle_buffer_diameter
+        m.scale.y = self.obstacle_buffer_diameter
+        m.scale.z = self.obstacle_buffer_height
+
+        m.color.r = self.obstacle_buffer_color_r
+        m.color.g = self.obstacle_buffer_color_g
+        m.color.b = self.obstacle_buffer_color_b
+        m.color.a = self.obstacle_buffer_color_a
+
+        m.lifetime.sec = 0
+        m.frame_locked = False
+
+        return m
+
     def make_label_marker(
         self,
         marker_id: int,
@@ -459,8 +553,20 @@ class ExperimentZ2D(Node):
                 marker_id += 1
 
         # ============================================================
-        # Draw two vertical cylinder obstacles
+        # Draw obstacle safety buffers first, then actual obstacles.
+        # Drawing buffers first keeps actual solid obstacle visible on top.
         # ============================================================
+
+        if self.show_obstacle_buffer:
+            for x_obs, y_obs in self.obstacles_xy:
+                arr.markers.append(
+                    self.make_obstacle_buffer_marker(
+                        marker_id=marker_id,
+                        x=x_obs,
+                        y=y_obs,
+                    )
+                )
+                marker_id += 1
 
         for x_obs, y_obs in self.obstacles_xy:
             arr.markers.append(

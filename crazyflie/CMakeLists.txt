@@ -129,6 +129,8 @@ install(PROGRAMS
   scripts/l1_cmdpos_bridge_ajbp_dc_diff_tau_obs.py
   scripts/experiment_mpp_obs.py
   scripts/extract_iter_keyboard_node.py
+  scripts/l1_cmdpos_bridge_ajbp_dc_diff_tau_obs_simp.py
+  scripts/bernstein_trajectory_player_online_mpp.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

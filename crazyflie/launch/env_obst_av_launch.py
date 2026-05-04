@@ -13,7 +13,7 @@ def generate_launch_description():
 
     bernstein_trajectory_player_online = Node(
         package="crazyflie",
-        executable="bernstein_trajectory_player_online.py",
+        executable="bernstein_trajectory_player_online_mpp.py",
         name="bernstein_trajectory_player_online",
         output=output,
         emulate_tty=True,

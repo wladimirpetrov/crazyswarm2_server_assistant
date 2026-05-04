@@ -15,7 +15,7 @@ class LabFloorIowa(Node):
 
         self.declare_parameter('frame_id', 'world')
         self.declare_parameter('topic', '/lab_floor_markers')
-        self.declare_parameter('airflow_topic', '/fan_airflow_markers')
+        self.declare_parameter('airflow_topic', '/fan_airflow_markers_change')
         self.declare_parameter('publish_rate_hz', 1.0)
 
         # Floor tile parameters
