@@ -1,0 +1,138 @@
+[0.010s] Invoking command in '/home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/caslab/ros2_ws/install/crazyflie_py:/opt/ros/humble /usr/bin/cmake /home/caslab/ros2_ws/src/crazyswarm2/crazyflie -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie
+[0.020s] -- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.149s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.157s] -- Found rclcpp: 16.0.12 (/opt/ros/humble/share/rclcpp/cmake)
+[0.186s] -- Found rosidl_generator_c: 3.1.6 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.188s] -- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.193s] -- Found rosidl_generator_cpp: 3.1.6 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.202s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.214s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.245s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.246s] -- Found rmw_fastrtps_cpp: 6.2.7 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[0.336s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.382s] -- Found tf2_ros: 0.25.12 (/opt/ros/humble/share/tf2_ros/cmake)
+[0.471s] -- Found rclpy: 3.3.16 (/opt/ros/humble/share/rclpy/cmake)
+[0.471s] -- Found std_srvs: 4.8.0 (/opt/ros/humble/share/std_srvs/cmake)
+[0.479s] -- Found sensor_msgs: 4.8.0 (/opt/ros/humble/share/sensor_msgs/cmake)
+[0.495s] -- Found crazyflie_interfaces: 2.0.0 (/home/caslab/ros2_ws/install/crazyflie_interfaces/share/crazyflie_interfaces/cmake)
+[0.511s] -- Found motion_capture_tracking_interfaces: 1.0.6 (/home/caslab/ros2_ws/install/motion_capture_tracking_interfaces/share/motion_capture_tracking_interfaces/cmake)
+[0.626s] -- Configuring done
+[0.669s] -- Generating done
+[0.681s] -- Build files have been written to: /home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie
+[0.690s] Invoked command in '/home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/caslab/ros2_ws/install/crazyflie_py:/opt/ros/humble /usr/bin/cmake /home/caslab/ros2_ws/src/crazyswarm2/crazyflie -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie
+[0.692s] Invoking command in '/home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/caslab/ros2_ws/install/crazyflie_py:/opt/ros/humble /usr/bin/cmake --build /home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie -- -j8 -l8
+[0.737s] [35m[1mConsolidate compiler generated dependencies of target teleop[0m
+[0.737s] [35m[1mConsolidate compiler generated dependencies of target crazyflieLinkCpp[0m
+[0.754s] [ 22%] Built target crazyflieLinkCpp
+[0.756s] [ 25%] [32m[1mLinking CXX executable teleop[0m
+[0.765s] [35m[1mConsolidate compiler generated dependencies of target crazyflie_cpp[0m
+[0.780s] [ 32%] Built target crazyflie_cpp
+[0.803s] [35m[1mConsolidate compiler generated dependencies of target scan[0m
+[0.804s] [35m[1mConsolidate compiler generated dependencies of target listParams[0m
+[0.804s] [35m[1mConsolidate compiler generated dependencies of target listLogVariables[0m
+[0.804s] [35m[1mConsolidate compiler generated dependencies of target crazyflie_server[0m
+[0.804s] [35m[1mConsolidate compiler generated dependencies of target reboot[0m
+[0.804s] [35m[1mConsolidate compiler generated dependencies of target listMemories[0m
+[0.804s] [35m[1mConsolidate compiler generated dependencies of target battery[0m
+[0.827s] [ 42%] Built target listMemories
+[0.828s] [ 42%] Built target listParams
+[0.828s] [ 47%] Built target listLogVariables
+[0.828s] [ 52%] Built target reboot
+[0.828s] [ 65%] Built target scan
+[0.828s] [ 65%] [32m[1mLinking CXX executable crazyflie_server[0m
+[0.828s] [ 65%] Built target battery
+[0.843s] [35m[1mConsolidate compiler generated dependencies of target console[0m
+[0.843s] [35m[1mConsolidate compiler generated dependencies of target version[0m
+[0.843s] [35m[1mConsolidate compiler generated dependencies of target downloadUSDLogfile[0m
+[0.844s] [35m[1mConsolidate compiler generated dependencies of target log[0m
+[0.844s] [35m[1mConsolidate compiler generated dependencies of target setParam[0m
+[0.847s] [35m[1mConsolidate compiler generated dependencies of target comCheck[0m
+[0.872s] [ 80%] Built target version
+[0.872s] [ 80%] Built target console
+[0.873s] [ 85%] Built target log
+[0.874s] [ 80%] Built target downloadUSDLogfile
+[0.874s] [ 90%] Built target comCheck
+[0.874s] [ 95%] Built target setParam
+[2.380s] [ 97%] Built target teleop
+[4.366s] [100%] Built target crazyflie_server
+[4.380s] Invoked command in '/home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/caslab/ros2_ws/install/crazyflie_py:/opt/ros/humble /usr/bin/cmake --build /home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie -- -j8 -l8
+[4.391s] Invoking command in '/home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/caslab/ros2_ws/install/crazyflie_py:/opt/ros/humble /usr/bin/cmake --install /home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie
+[4.400s] -- Install configuration: ""
+[4.400s] -- Execute custom install script
+[4.401s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/comCheck
+[4.411s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/scan
+[4.421s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/listParams
+[4.431s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/listLogVariables
+[4.441s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/listMemories
+[4.451s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/reboot
+[4.462s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/battery
+[4.472s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/version
+[4.482s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/console
+[4.494s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/log
+[4.504s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/setParam
+[4.514s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/downloadUSDLogfile
+[4.524s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/teleop
+[4.535s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/crazyflie_server
+[4.548s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/crazyflie_server.py
+[4.557s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/chooser.py
+[4.568s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/vel_mux.py
+[4.578s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/cfmult.py
+[4.588s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/simple_mapper_multiranger.py
+[4.598s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/aideck_streamer.py
+[4.608s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/gui.py
+[4.617s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/flash.py
+[4.627s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_takeoff_cmdpos.py
+[4.637s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge.py
+[4.646s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_two_drones_compare.py
+[4.656s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_smooth_traj_test.py
+[4.666s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_ajbp_dc.py
+[4.676s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/plotting_drones.py
+[4.686s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/control_point_vector_saver.py
+[4.696s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/bernstein_trajectory_player.py
+[4.705s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/bernstein_trajectory_player_online.py
+[4.715s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/lab_floor_iowa.py
+[4.724s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/experiment_xyzpsi_3d.py
+[4.734s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/experiment_z_2d.py
+[4.743s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/experiment_xy_2d.py
+[4.753s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_ajbp_dc_diff_tau.py
+[4.763s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_ajbp_dc_diff_tau_obs.py
+[4.773s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/experiment_mpp_obs.py
+[4.783s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/extract_iter_keyboard_node.py
+[4.793s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_ajbp_dc_diff_tau_obs_simp.py
+[4.803s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/bernstein_trajectory_player_online_mpp.py
+[4.813s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//launch/env_obst_av_launch.py
+[4.823s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//launch/launch.py
+[4.833s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//launch/launch_teleop2.py
+[4.843s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//launch/teleop_launch.py
+[4.853s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/aideck_streamer.yaml
+[4.863s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/config.rviz
+[4.873s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies.yaml
+[4.883s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Gage.yaml
+[4.893s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Gage_but_Vladimir_used_for_4_drone_run_amazon.yaml
+[4.903s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Mia_obst_av_ml.yaml
+[4.912s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Vlad_one_drone_L1_MPC_last.yaml
+[4.922s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Vlad_one_drone_MPP_obs.yaml
+[4.932s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Vlad_two_drones_comp_l1_with_and_without.yaml
+[4.942s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/gage-config.zip
+[4.952s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/motion_capture.yaml
+[4.963s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/server.yaml
+[4.973s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/teleop.yaml
+[4.983s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//urdf/cf2_assembly.stl
+[4.993s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//urdf/cf2_assembly_with_props.dae
+[5.002s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//urdf/crazyflie_description.urdf
+[5.012s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/ament_index/resource_index/package_run_dependencies/crazyflie
+[5.021s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/ament_index/resource_index/parent_prefix_path/crazyflie
+[5.030s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/environment/ament_prefix_path.sh
+[5.039s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/environment/ament_prefix_path.dsv
+[5.049s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/environment/path.sh
+[5.059s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/environment/path.dsv
+[5.069s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/local_setup.bash
+[5.079s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/local_setup.sh
+[5.089s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/local_setup.zsh
+[5.098s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/local_setup.dsv
+[5.108s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/package.dsv
+[5.117s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/ament_index/resource_index/packages/crazyflie
+[5.126s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/cmake/crazyflieConfig.cmake
+[5.135s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/cmake/crazyflieConfig-version.cmake
+[5.145s] -- Symlinking: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/package.xml
+[5.157s] Invoked command in '/home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/caslab/ros2_ws/install/crazyflie_py:/opt/ros/humble /usr/bin/cmake --install /home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie

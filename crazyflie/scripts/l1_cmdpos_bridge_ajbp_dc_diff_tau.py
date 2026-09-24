@@ -44,7 +44,7 @@ class L1CmdPosBridge(Node):
         # Parameters
         # ----------------------------
         self.declare_parameter("cf_name", "cf231")
-        self.declare_parameter("takeoff_height", 0.6)
+        self.declare_parameter("takeoff_height", 1.0)
         self.declare_parameter("takeoff_duration", 2.0)
         self.declare_parameter("publish_rate_hz", 100.0)
 
@@ -72,10 +72,10 @@ class L1CmdPosBridge(Node):
 
         # Extraction settings for Bernstein vectors
         self.declare_parameter("extract_ts", 0.05)
-        self.declare_parameter("extract_iter_minus_1_x", 200.0) #200 for libbebotv1
-        self.declare_parameter("extract_iter_minus_1_y", 20.0) #200 for libbebotv1
-        self.declare_parameter("extract_iter_minus_1_z", 200.0) #200 for libbebotv1
-        self.declare_parameter("extract_iter_minus_1_psi", 200.0) #200 for libbebotv1
+        self.declare_parameter("extract_iter_minus_1_x", 50.0) #200 for libbebotv1
+        self.declare_parameter("extract_iter_minus_1_y", 50.0) #200 for libbebotv1
+        self.declare_parameter("extract_iter_minus_1_z", 23.0) #200 for libbebotv1
+        self.declare_parameter("extract_iter_minus_1_psi", 23.0) #200 for libbebotv1
 
         self.cf_name = str(self.get_parameter("cf_name").value)
         self.takeoff_height = float(self.get_parameter("takeoff_height").value)

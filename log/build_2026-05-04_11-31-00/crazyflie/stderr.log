@@ -1,0 +1,6 @@
+[31mCMake Error at cmake_install.cmake:278 (file):
+  file INSTALL cannot find
+  "/home/caslab/ros2_ws/src/crazyswarm2/crazyflie/scriots/bernstein_trajectory_player_online_mpp.py":
+  No such file or directory.
+
+[0m

@@ -1,0 +1,1 @@
+/home/caslab/ros2_ws/src/crazyswarm2/crazyflie/scripts/bernstein_trajectory_player_online_mpp.py

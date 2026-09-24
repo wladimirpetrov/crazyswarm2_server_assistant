@@ -1,0 +1,1 @@
+/home/caslab/ros2_ws/src/crazyswarm2/crazyflie/scripts/experiment_xyzpsi_3d.py

@@ -121,16 +121,24 @@ install(PROGRAMS
   scripts/control_point_vector_saver.py
   scripts/bernstein_trajectory_player.py
   scripts/bernstein_trajectory_player_online.py
+  scripts/bernstein_trajectory_player_online_five.py
   scripts/lab_floor_iowa.py
   scripts/experiment_xyzpsi_3d.py
+  scripts/experiment_xyzpsi_3d_airf_mach.py
   scripts/experiment_z_2d.py
+  scripts/experiment_z_2d_airf_mach.py
   scripts/experiment_xy_2d.py
+  scripts/experiment_xy_2d_airf_mach.py
   scripts/l1_cmdpos_bridge_ajbp_dc_diff_tau.py
   scripts/l1_cmdpos_bridge_ajbp_dc_diff_tau_obs.py
   scripts/experiment_mpp_obs.py
   scripts/extract_iter_keyboard_node.py
   scripts/l1_cmdpos_bridge_ajbp_dc_diff_tau_obs_simp.py
   scripts/bernstein_trajectory_player_online_mpp.py
+  scripts/python_run_cmdpos_vector_player.py
+  scripts/experiment_sos_mpp_over_obs.py
+  scripts/lab_floor_iowa_dynamic.py
+  scripts/cf231_pose_to_actual_topics.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

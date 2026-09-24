@@ -1,0 +1,130 @@
+-- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Found rclcpp: 16.0.12 (/opt/ros/humble/share/rclcpp/cmake)
+-- Found rosidl_generator_c: 3.1.6 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+-- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)
+-- Found rosidl_generator_cpp: 3.1.6 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 6.2.7 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found tf2_ros: 0.25.12 (/opt/ros/humble/share/tf2_ros/cmake)
+-- Found rclpy: 3.3.16 (/opt/ros/humble/share/rclpy/cmake)
+-- Found std_srvs: 4.8.0 (/opt/ros/humble/share/std_srvs/cmake)
+-- Found sensor_msgs: 4.8.0 (/opt/ros/humble/share/sensor_msgs/cmake)
+-- Found crazyflie_interfaces: 2.0.0 (/home/caslab/ros2_ws/install/crazyflie_interfaces/share/crazyflie_interfaces/cmake)
+-- Found motion_capture_tracking_interfaces: 1.0.6 (/home/caslab/ros2_ws/install/motion_capture_tracking_interfaces/share/motion_capture_tracking_interfaces/cmake)
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/caslab/ros2_ws/src/crazyswarm2/build/crazyflie
+[35m[1mConsolidate compiler generated dependencies of target teleop[0m
+[35m[1mConsolidate compiler generated dependencies of target crazyflieLinkCpp[0m
+[ 22%] Built target crazyflieLinkCpp
+[ 27%] Built target teleop
+[35m[1mConsolidate compiler generated dependencies of target crazyflie_cpp[0m
+[ 35%] Built target crazyflie_cpp
+[35m[1mConsolidate compiler generated dependencies of target listLogVariables[0m
+[35m[1mConsolidate compiler generated dependencies of target listParams[0m
+[35m[1mConsolidate compiler generated dependencies of target listMemories[0m
+[35m[1mConsolidate compiler generated dependencies of target crazyflie_server[0m
+[35m[1mConsolidate compiler generated dependencies of target scan[0m
+[35m[1mConsolidate compiler generated dependencies of target reboot[0m
+[35m[1mConsolidate compiler generated dependencies of target version[0m
+[35m[1mConsolidate compiler generated dependencies of target battery[0m
+[ 40%] Built target battery
+[ 45%] Built target listParams
+[ 50%] Built target reboot
+[ 60%] Built target version
+[ 60%] Built target scan
+[ 65%] Built target crazyflie_server
+[ 70%] Built target listMemories
+[ 75%] Built target listLogVariables
+[35m[1mConsolidate compiler generated dependencies of target console[0m
+[35m[1mConsolidate compiler generated dependencies of target comCheck[0m
+[35m[1mConsolidate compiler generated dependencies of target setParam[0m
+[35m[1mConsolidate compiler generated dependencies of target log[0m
+[35m[1mConsolidate compiler generated dependencies of target downloadUSDLogfile[0m
+[ 85%] Built target setParam
+[ 85%] Built target comCheck
+[ 90%] Built target console
+[ 95%] Built target log
+[100%] Built target downloadUSDLogfile
+-- Install configuration: ""
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/comCheck
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/scan
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/listParams
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/listLogVariables
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/listMemories
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/reboot
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/battery
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/version
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/console
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/log
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/setParam
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/downloadUSDLogfile
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/teleop
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/crazyflie_server
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/crazyflie_server.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/chooser.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/vel_mux.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/cfmult.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/simple_mapper_multiranger.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/aideck_streamer.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/gui.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/flash.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_takeoff_cmdpos.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_two_drones_compare.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_smooth_traj_test.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_ajbp_dc.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/plotting_drones.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/control_point_vector_saver.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/bernstein_trajectory_player.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/bernstein_trajectory_player_online.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/lab_floor_iowa.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/experiment_xyzpsi_3d.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/experiment_z_2d.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/experiment_xy_2d.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_ajbp_dc_diff_tau.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_ajbp_dc_diff_tau_obs.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/experiment_mpp_obs.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/extract_iter_keyboard_node.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/lib/crazyflie/l1_cmdpos_bridge_ajbp_dc_diff_tau_obs_simp.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//launch
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//launch/teleop_launch.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//launch/env_obst_av_launch.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//launch/launch.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//launch/launch_teleop2.py
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/teleop.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/motion_capture.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/config.rviz
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Vlad_one_drone_MPP_obs.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/server.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Vlad_one_drone_L1_MPC_last.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Gage_but_Vladimir_used_for_4_drone_run_amazon.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Gage.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Mia_obst_av_ml.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/gage-config.zip
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/crazyflies_Vlad_two_drones_comp_l1_with_and_without.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//config/aideck_streamer.yaml
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//urdf
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//urdf/crazyflie_description.urdf
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//urdf/cf2_assembly.stl
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie//urdf/cf2_assembly_with_props.dae
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/ament_index/resource_index/package_run_dependencies/crazyflie
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/ament_index/resource_index/parent_prefix_path/crazyflie
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/environment/ament_prefix_path.sh
+-- Installing: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/environment/ament_prefix_path.dsv
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/environment/path.sh
+-- Installing: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/environment/path.dsv
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/local_setup.bash
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/local_setup.sh
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/local_setup.zsh
+-- Installing: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/local_setup.dsv
+-- Installing: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/package.dsv
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/ament_index/resource_index/packages/crazyflie
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/cmake/crazyflieConfig.cmake
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/cmake/crazyflieConfig-version.cmake
+-- Up-to-date: /home/caslab/ros2_ws/src/crazyswarm2/install/crazyflie/share/crazyflie/package.xml
